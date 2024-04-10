@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# This will download the necessary features for cartography_functions.py. The features can then be plotted
+# onto the maps before saving them using add_feature. Features include borders, roads, rivers, etc...
+
 # List of URLs
 urls=(
 "https://github.com/nvkelso/natural-earth-vector/raw/master/10m_physical/ne_10m_coastline.cpg"
