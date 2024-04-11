@@ -59,7 +59,7 @@ def make_map(x,y,z,crs_in,save_name,map_projection="original",colormap="jet",
             x = x.reshape(z.shape)
             y = y.reshape(z.shape)
             print(" Summary histograms of new coordinates:\nx:\n%s\ny:\n%s"%(
-                np.histogram(x)[1],np.histogram(y)[1]))
+                np.histogram(np.nan_to_num(x))[1],np.histogram(np.nan_to_num(y))[1]))
     # make the plot
     ax = plt.axes(projection=ax_projection,aspect="equal")
     ax.set_xlim(left=np.min(x),right=np.max(x))
@@ -161,6 +161,8 @@ def read_netcdf_2D(nc_fname,nc_xvar,nc_yvar,nc_var,nc_tdim=None,nc_ntime=0,
         print(__file__ + ": nc_btdim or nc_tdim are not defined. array dimension may be awkward.")
     elif (z.ndim == 3 and (nc_tdim == None and nc_btdim == None)):
         print(__file__ + ": nc_btdim and nc_tdim are not defined. array dimension may be awkward.")
+    elif (z.ndim == 3 and (nc_tdim != None and nc_btdim == None)):
+        print(__file__ + ": nc_btdim or nc_tdim are not defined. array dimension may be awkward.")
     elif (z.ndim == 2 and (nc_tdim != None or nc_btdim != None)):
         print(__file__ + ": nc_btdim or nc_tdim are defined,but nc array is 2D??")
     # subsample z
@@ -168,6 +170,7 @@ def read_netcdf_2D(nc_fname,nc_xvar,nc_yvar,nc_var,nc_tdim=None,nc_ntime=0,
         z = z.isel({nc_tdim:nc_ntime})
     if nc_btdim != None:
         z = z.isel({nc_btdim:nc_nlevel})
+    if z.ndim != 2 : print(__file__ + ": netcdf variable could not be converted to 2D. Check btdim and tdim are properly defined.")
     data.close()
     # convert data format of outputs
     x = np.array(x)
@@ -176,7 +179,7 @@ def read_netcdf_2D(nc_fname,nc_xvar,nc_yvar,nc_var,nc_tdim=None,nc_ntime=0,
     # return the x, y, z 2D arrays and the crs string if it was found (None otherwise)
     print(" Summary histograms of netcdf data:\n    x:\n    %s\n    "
                 "y:\n   %s\n    variable:   \n %s\n    CRS:\n  %s"%(
-       np.histogram(x)[1],np.histogram(y)[1],np.histogram(z)[1],crs))
+       np.histogram(np.nan_to_num(x))[1],np.histogram(np.nan_to_num(y))[1],np.histogram(np.nan_to_num(z))[1],crs))
     return x,y,z,crs
     
 
