@@ -112,8 +112,9 @@ def make_map(x,y,z,crs_in,save_name,map_projection="original",colormap="jet",
             ax.gridlines(crs=ax_projection,draw_labels=True,lw=0.6,color="k")    
     # save the figure
     plt.savefig(save_name)
-    print("Saved plot to %s"%save_name) 
-    return True
+    print(" Saved plot to %s"%save_name) 
+    return ax
+
 
 def add_feature(ax,shp_file,crs="EPSG:4326",zorder=0.5,color="gray",width=1.5):
     """
@@ -235,4 +236,22 @@ def scale_bar(ax, proj, length, location=(0.5, 0.05), linewidth=3,
     t1 = ax.text(left, sbcy, u'\u25B2\nN', horizontalalignment='center', 
         verticalalignment='bottom', **trans_arg)
 
-
+def make_colorbar(ax,save_name,label=""):
+    """
+    make a new figure with two colorbars, vertical and horizontal
+    ax: matplotlib axis containing the plot from which the colorbar is to be made
+    save_name: name or path of the new figure
+    label: the label on the colorbar, (e.g r"$\mu g m^{-3}$")
+    """
+    # get the QuadMesh objects from axis and select the first one
+    artists = ax.get_children()
+    images = [artist for artist in artists if isinstance(artist, matplotlib.collections.QuadMesh)]
+    image = images[0]
+    # add colorbars to old figure and remove ax contents
+    fig = ax.get_figure()
+    fig.colorbar(image, ax=ax, orientation="horizontal",label=label)
+    fig.colorbar(image, ax=ax, orientation="vertical",label=label)
+    ax.cla()
+    plt.savefig(save_name)
+    print(" Saved colorbar at %s"%save_name)
+    return save_name 
