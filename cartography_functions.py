@@ -18,7 +18,7 @@ shp = {
 "lakes":"shp_features/ne_10m_lakes.shp"
 }
 
-def make_map(x,y,z,crs_in,save_name,map_projection="original",colormap="jet",
+def make_map(x,y,z,crs_in,save_name,map_projection="original",colormap="jet",vmin=None,vmax=None,
     draw_scalebar=False,sb_length=10,draw_gridlines=False,draw_rivers=False,draw_roads=False,
     draw_bnational=False,draw_bregional=False,draw_coast=False,draw_cities=False,
     draw_lakes=False,shp=None, lw_fac=1.0):
@@ -30,6 +30,7 @@ def make_map(x,y,z,crs_in,save_name,map_projection="original",colormap="jet",
     save_name: the path w/ basename of the output file with extension. extension determines format
     map_projection: original (crs_in) or PlateCarree
     colormap: a matplotlib colormap name
+    vmin,vmax: colormap limits
     draw_*: boolean. Weather to draw a given element over the colormap of z.
         most are features like roads and borders etc...
         bnational and bregional are the national and regional boundaries.
@@ -64,7 +65,10 @@ def make_map(x,y,z,crs_in,save_name,map_projection="original",colormap="jet",
     ax = plt.axes(projection=ax_projection,aspect="equal")
     ax.set_xlim(left=np.min(x),right=np.max(x))
     ax.set_ylim(bottom=np.min(y),top=np.max(y))
-    cont = ax.pcolormesh(x,y,z,cmap=colormap,rasterized=True) # rasterize to reduce image size
+    if vmin is None: vmin = np.min(z)
+    if vmax is None: vmax = np.max(z)
+    cont = ax.pcolormesh(x,y,z,cmap=colormap,rasterized=True, # rasterize to reduce image size
+        vmin=vmin, vmax=vmax) 
     # cartopy removes tick labels from axes, have to add them again
     if map_projection == "PlateCarree":
         ax.gridlines(crs=ax_projection,draw_labels=True,lw=0)
