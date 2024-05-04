@@ -19,8 +19,8 @@ shp = {
 }
 
 def make_map(x,y,z,crs_in,save_name,map_projection="original",colormap="jet",vmin=None,vmax=None,
-    draw_scalebar=False,sb_length=10,draw_gridlines=False,draw_rivers=False,draw_roads=False,
-    draw_bnational=False,draw_bregional=False,draw_coast=False,draw_cities=False,
+    draw_scalebar=False,sb_length=10,sb_loc=0.05,draw_gridlines=False,draw_rivers=False,
+    draw_roads=False,draw_bnational=False,draw_bregional=False,draw_coast=False,draw_cities=False,
     draw_lakes=False,shp=None, lw_fac=1.0):
     """
     create and save a map of a 2D variable.
@@ -105,7 +105,8 @@ def make_map(x,y,z,crs_in,save_name,map_projection="original",colormap="jet",vmi
         else:
             sb_proj =  ax_projection
         # plot the scale bar and north arrow
-        scale_bar(ax, sb_proj, sb_length, m_per_unit=sb_munit, units=sb_unit)
+        scale_bar(ax, sb_proj, sb_length, 
+            location=(0.5, sb_loc), m_per_unit=sb_munit, units=sb_unit)
     # add the gridlines if requested
     if draw_gridlines:
         if map_projection == "original":
