@@ -21,7 +21,7 @@ shp = {
 def make_map(x,y,z,crs_in,save_name,map_projection="original",colormap="jet",vmin=None,vmax=None,
     draw_scalebar=False,sb_length=10,sb_loc=0.05,draw_gridlines=False,draw_rivers=False,
     draw_roads=False,draw_bnational=False,draw_bregional=False,draw_coast=False,draw_cities=False,
-    draw_lakes=False,shp=None, lw_fac=1.0):
+    draw_lakes=False,shp=None, lw_fac=1.0, title=None):
     """
     create and save a map of a 2D variable.
     x,y: the geo coordinates in crs_in units. 2D arrays.
@@ -114,7 +114,9 @@ def make_map(x,y,z,crs_in,save_name,map_projection="original",colormap="jet",vmi
             plt.grid(lw=0.6,color="k")
         else:
             # use cartopy functions
-            ax.gridlines(crs=ax_projection,draw_labels=True,lw=0.6,color="k")    
+            ax.gridlines(crs=ax_projection,draw_labels=True,lw=0.6,color="k")
+    if title is not None:
+        ax.set_title(title) 
     # save the figure
     plt.savefig(save_name)
     print(" Saved plot to %s"%save_name) 

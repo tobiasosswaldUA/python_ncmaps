@@ -8,7 +8,9 @@ print("modules loaded")
 #nc_fname = "/CESAM/GEMAC2/tobias/MOST_disperfire/CONdf_0000_20210301_01_PPM_coa.nc"
 #nc_fname = "/CESAM/GEMAC2/tobias/FirEUrisk_emiFuture/futureFEMISSIONS_FireC_ssp126_ACCESS-CM2_BASE.nc"
 #nc_fname = "/CESAM/GEMAC2/tobias/MOST_disperfire/EMIdf_0000_20210301_01_PPM_coa.nc"
-nc_fname = "/CESAM/GEMAC2/tobias/APIFLAME_data/sweden_2014/EMISSIONS/FIRE_EMISS_SE05/AB_FRP_MODIS/SE05_gridded/AB_FRP_veg_grid_201407_SE05_forplot_nc4.nc" 
+#nc_fname = "/CESAM/GEMAC2/tobias/APIFLAME_data/sweden_2014/EMISSIONS/FIRE_EMISS_SE05/AB_FRP_MODIS/SE05_gridded/AB_FRP_veg_grid_201408_SE05_forplot_nc4.nc" 
+nc_fname = "/CESAM/GEMAC2/tobias/FirEUrisk_sweden/chimere_v2020r1_ERA5/OUT_sweden/SE05_API/data_SE05_SE05_API/total_column_CO/FEMISSIONS.2014073100_24_SE05_API.nc" 
+#nc_fname = "__RUN__" 
 
 nc_xvar = "lon"
 #nc_xvar = "UTMx"
@@ -22,16 +24,19 @@ nc_yvar = "lat"
 #nc_var = "EMI"
 #nc_var = "EMIstart"
 #nc_var = "PM10"
-nc_var = "AB_MCD64"
+#nc_var = "AB_MCD64"
+nc_var = "column_CO"
 
 nc_crs = "CRS"
 
 #nc_tdim = "Time"
-#nc_tdim = None
+nc_tdim = None
 #nc_tdim = "Times" 
-nc_tdim = "TIME" 
+#nc_tdim = "TIME" 
 
-nc_ntime = 26
+#nc_ntime = 26
+#nc_ntime = __RUN__
+nc_ntime = None
 
 #nc_btdim = "bottom_top"
 nc_btdim = None 
@@ -44,11 +49,17 @@ map_projection = "PlateCarree"
 
 #cblabel = r"Emission start [s]"
 #cblabel = r"%s emission 2070-2100 [$g/m^2$]"%nc_var
-cblabel = "Burned Area detections"
+cblabel = r"Daily CO emission [$g m^{-2}$]"
 
 vmin = 0
-vmax = 10
-colormap = "autumn_r"
+#vmin = None
+vmax = 4000
+#vmax = None
+#colormap = "autumn_r"
+colormap = "plasma_r"
+
+title = None
+title = nc_fname[-25:-18]
 
 ## DON'T TOUCH THIS (or do)
 
@@ -64,11 +75,13 @@ x, y, z, crs_data = cf.read_netcdf_2D(nc_fname,nc_xvar,nc_yvar,nc_var,nc_tdim=nc
 print("Manipulating data")
 #z = z*100.
 #z[z>9.e+36] = None
+z = (28.0101/6.022E23)*(60*60*24)*10E4 * z # molecules CO to g CO, molar mass of CO is 28.0101, 6.02.. is avogadro
 
 print("Plotting")
 ax = cf.make_map(x,y,z,crs_data,savename,map_projection=map_projection,draw_gridlines=True,draw_coast=True,
     draw_rivers=False,draw_roads=False,draw_bnational=True,draw_bregional=True,draw_cities=False,
-    draw_lakes=True,shp=cf.shp,draw_scalebar=True,sb_length=50,sb_loc=0.1,colormap=colormap,vmin=vmin,vmax=vmax)
+    draw_lakes=True,shp=cf.shp,draw_scalebar=True,sb_length=50,sb_loc=0.1,colormap=colormap,
+    vmin=vmin,vmax=vmax,title=title)
 
 print("Making Colorbar")
 cb_savename = "%s_colorbar.pdf"%savename[:-4]
