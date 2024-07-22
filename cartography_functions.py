@@ -15,13 +15,14 @@ shp = {
 "bregional":"shp_features/ne_10m_admin_1_states_provinces_lines.shp",
 "coast":"shp_features/ne_10m_coastline.shp",
 "cities":"shp_features/ne_10m_populated_places.shp",
-"lakes":"shp_features/ne_10m_lakes.shp"
+"lakes":"shp_features/ne_10m_lakes.shp",
+"ocean":"shp_features/ne_10m_ocean.shp"
 }
 
 def make_map(x,y,z,crs_in,save_name,map_projection="original",colormap="jet",vmin=None,vmax=None,
     draw_scalebar=False,sb_length=10,sb_loc=0.05,draw_gridlines=False,draw_rivers=False,
     draw_roads=False,draw_bnational=False,draw_bregional=False,draw_coast=False,draw_cities=False,
-    draw_lakes=False,shp=None, lw_fac=1.0, title=None):
+    draw_lakes=False,draw_ocean=False,shp=None, lw_fac=1.0, title=None):
     """
     create and save a map of a 2D variable.
     x,y: the geo coordinates in crs_in units. 2D arrays.
@@ -87,6 +88,8 @@ def make_map(x,y,z,crs_in,save_name,map_projection="original",colormap="jet",vmi
         color="black",width=1.5*lw_fac)
     if draw_lakes:      ax = add_feature(ax,shp["lakes"],crs_features,zorder=3,
         color="deepskyblue", width=0.7*lw_fac)
+    if draw_ocean:      ax = add_feature(ax,shp["ocean"],crs_features,zorder=2,
+        color="lightskyblue", width=0.7*lw_fac)
     # add the scalebar if requested
     if draw_scalebar:
         if sb_length < 1:
