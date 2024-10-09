@@ -2,6 +2,7 @@ import cartopy.crs as ccrs
 from math import floor
 import matplotlib.pyplot as plt
 import matplotlib
+from matplotlib.colors import LinearSegmentedColormap
 import geopandas as gp
 import xarray as xr
 import numpy as np
@@ -142,6 +143,16 @@ def add_feature(ax,shp_file,crs="EPSG:4326",zorder=0.5,color="gray",width=1.5):
     print(" added feature %s"%shp_file)
     return ax
 
+def get_netcdf_times(nc_fname,nc_time):
+    """
+    Extract the array of times
+    """
+    data = xr.open_dataset(nc_fname)
+    times = data[nc_time]
+    times = np.array(times)
+    times = [time.decode('utf-8').replace(':', '') for time in times]
+    return times
+    
 def read_netcdf_2D(nc_fname,nc_xvar,nc_yvar,nc_var,nc_tdim=None,nc_ntime=0,
     nc_btdim=None,nc_nlevel=0,nc_crsdim="CRS"):
     """
@@ -192,6 +203,73 @@ def read_netcdf_2D(nc_fname,nc_xvar,nc_yvar,nc_var,nc_tdim=None,nc_ntime=0,
        np.histogram(np.nan_to_num(x))[1],np.histogram(np.nan_to_num(y))[1],np.histogram(np.nan_to_num(z))[1],crs))
     return x,y,z,crs
     
+def read_netcdf_time2D(nc_fname,nc_xvar,nc_yvar,nc_var,nc_tdim,
+    nc_btdim=None,nc_nlevel=0,nc_crsdim="CRS"):
+    """
+    extract coordinates, coordinate reference system proj string and values of a
+    netcdf variable evolving in time. bottom_top is assumed non existent unless
+    specified. If specified extract var at nc_nlevel
+    nc_fname: the netcdf file name
+    nc_xvar, nc_yvar: are the names of the netcdf variables of x, y coordinates
+    nc_var: the name of the variable we want to extract
+    nc_tdim: the name of the netcdf dimension time
+    nc_btdim: name of nc bottom_top dimension
+    nc_nlevel: the height (int) at which to extract var
+    nc_crsdim: name of nc global attribute containing proj string of netcdf coordinate ref system
+    """
+    # read the necessary variables and dims from netcdf file    
+    data = xr.open_dataset(nc_fname)
+    x = data[nc_xvar]
+    y = data[nc_yvar]
+    z = data[nc_var]
+    if nc_crsdim in data.attrs:
+        crs = str(data.attrs[nc_crsdim])
+    else:
+        crs = None
+    # check consistency of inputs with dimesnion of z
+    if not ((nc_btdim != None and z.ndim == 4)  or (nc_btdim == None and z.ndim == 3)):
+        print(__file__ + ": Array dimensions are inconsistent")
+    # subsample z
+    if nc_btdim != None:
+        z = z.isel({nc_btdim:nc_nlevel})
+    if z.ndim != 3 : print(__file__ + ": netcdf variable could not be converted to 2D+time. Check btdim is properly defined.")
+    data.close()
+    # convert data format of outputs
+    x = np.array(x)
+    y = np.array(y)
+    z = np.array(z)
+    # return the x, y, z 2D/2D+time arrays and the crs string if it was found (None otherwise)
+    if verbose>1:
+        print(" Summary histograms of netcdf data:\n    x:\n    %s\n    "
+                    "y:\n   %s\nvariable:\n %s\n    CRS:\n  %s\ntimes:  %d"%(
+           np.histogram(np.nan_to_num(x))[1],np.histogram(np.nan_to_num(y))[1],np.histogram(np.nan_to_num(z))[1],crs,np.shape(z)[-1]))
+    return x,y,z,crs
+
+def calc_hourly_mean(z,times):
+    """
+    Takes an array z and calculates the (backwards) average for each hour. The resulting array
+    keeps spatial dimensions but is equal or smaller in the temporal dimension.
+    times is an array of the datetimes for each instant of z. it can be extracted with
+    get_netcdf_time. 
+    """
+    # convert times to datetime (e.g. 2024-09-17_010200)
+    times = [dt.datetime.strptime(t, '%Y-%m-%d_%H%M%S') for t in times]
+    # create a dataset to make use of xarray functionalities
+    data = xr.Dataset(  data_vars={ "var":(["Time","south_north","west_east"],z)},
+                           coords={ "west_east":("west_east",np.arange(np.shape(z)[2])),
+                                    "south_north":("south_north",np.arange(np.shape(z)[1])),
+                                    "Time":("Time",times)})
+
+    # print out things for debugging
+    if verbose>1:
+        print("Calculation of hourly means")
+        print("Array shape is: "+str(np.shape(z)))
+        print("Time dimension is:\n"+str(times))
+        print("Working with the following data array:\n")
+        data.info()
+    # perform hourly averaging
+    data_avg = data["var"].resample(Time='H',label="right").mean()
+    return np.array(data_avg), np.array(data_avg.coords["Time"])
 
 def utm_from_lon(lon):
     """
@@ -268,3 +346,17 @@ def make_colorbar(ax,save_name,label=""):
     plt.savefig(save_name)
     print(" Saved colorbar at %s"%save_name)
     return save_name 
+
+
+# Custom colormaps
+IQAir = LinearSegmentedColormap.from_list('IQAir', (
+    # Edit this gradient at https://eltos.github.io/gradient/#Random%20gradient%202887=4.3:9DD313-14.8:F9CE39-38.6:F78F49-61.6:F45D5E-78.8:9F6FB4-93.8:9E697A
+    (0.000, (0.616, 0.827, 0.075)),
+    (0.043, (0.616, 0.827, 0.075)),
+    (0.148, (0.976, 0.808, 0.224)),
+    (0.386, (0.969, 0.561, 0.286)),
+    (0.616, (0.957, 0.365, 0.369)),
+    (0.788, (0.624, 0.435, 0.706)),
+    (0.938, (0.620, 0.412, 0.478)),
+    (1.000, (0.620, 0.412, 0.478))))
+matplotlib.colormaps.register(cmap=IQAir)
